@@ -77,18 +77,23 @@
         
         <script>
             function logout() {
-                $.ajax({
-                    url         : 'ajax/logout.php',
-                    type        : 'POST',
-                    success: function (_data) {
-                        // 3. После выхода отправляем на страницу авторизации
-                        window.location.href = "login.php"; 
-                    },
-                    error: function(){
-                        alert('Ошибка при выходе из системы');
-                    }
-                });
-            }
+			$.ajax({
+				url: 'ajax/logout.php',
+				type: 'POST',
+				xhrFields: {
+					withCredentials: true 
+				},
+				success: function (_data) {
+					localStorage.removeItem("token");
+					window.location.href = "login.php"; 
+				},
+				error: function() {
+					localStorage.removeItem("token");
+					document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+					window.location.href = "login.php";
+				}
+			});
+		}
         </script>
     </body>
 </html>
