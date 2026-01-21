@@ -77,16 +77,28 @@
 					data        : data,
 					processData : false,
 					contentType : false, 
-					success: function (response) {
-						let res = JSON.parse(response);
-						if(res.token) {
-							console.log("Авторизация через JWT успешна");
-							// Сохраняем токен в localStorage
-							localStorage.setItem("token", res.token);
-							// Перенаправляем на главную
-							window.location.href = "index.php"; 
+					success: function (_data) {
+					try {
+						var response = JSON.parse(_data);
+						
+						if(response.token) {
+							console.log("Авторизация прошла успешно");
+
+							localStorage.setItem("token", response.token);
+							document.cookie = "token=" + response.token + "; path=/; max-age=3600; SameSite=Lax";
+							location.reload(); 
+							
+						} else {
+							alert("Ошибка: сервер не вернул токен.");
+							loading.style.display = "none";
+							button.className = "button";
 						}
-					},
+					} catch (e) {
+						console.error("Ошибка парсинга ответа:", _data);
+						alert("Логин или пароль не верный.");
+						loading.style.display = "none";
+						button.className = "button";
+					}},
 					error: function() {
 						alert("Ошибка авторизации");
 						loading.style.display = "none";

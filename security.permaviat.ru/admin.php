@@ -1,18 +1,23 @@
 <?php
-	session_start();
-	include("./settings/connect_datebase.php");
-	
-	if (isset($_SESSION['user'])) {
-		if($_SESSION['user'] != -1) {
-			$user_query = $mysqli->query("SELECT * FROM `users` WHERE `id` = ".$_SESSION['user']); // проверяем
-			while($user_read = $user_query->fetch_row()) {
-				if($user_read[3] == 0) header("Location: index.php");
-			}
-		} else header("Location: login.php");
- 	} else {
+    include("./settings/jwt_helper.php");
+    $user = get_user_from_jwt();
+
+    if ($user) {
+        if ($user['roll'] == 0) {
+            header("Location: user.php");
+            exit;
+        } else if ($user['roll'] == 1) {
+            header("Location: admin.php");
+            exit;
+        } else {
 		header("Location: login.php");
 		echo "Пользователя не существует";
 	}
+    }if (!$user || $user['roll'] != 1) {
+        header("Location: index.php"); // Выкидываем, если не админ
+        exit;
+    }
+    $admin_id = $user['sub'];
 ?>
 <!DOCTYPE HTML>
 <html>
