@@ -72,32 +72,23 @@
 				
 				// AJAX запрос
 				$.ajax({
-					url         : 'ajax/login_user.php',
-					type        : 'POST', // важно!
+					url         : 'https://auth.permaviat.ru/login.php', // НОВЫЙ URL
+					type        : 'POST',
 					data        : data,
-					cache       : false,
-					dataType    : 'html',
-					// отключаем обработку передаваемых данных, пусть передаются как есть
 					processData : false,
-					// отключаем установку заголовка типа запроса. Так jQuery скажет серверу что это строковой запрос
 					contentType : false, 
-					// функция успешного ответа сервера
-					success: function (_data) {
-						console.log("Авторизация прошла успешно, id: " +_data);
-						if(_data == "") {
-							loading.style.display = "none";
-							button.className = "button";
-							alert("Логин или пароль не верный.");
-						} else {
-							localStorage.setItem("token", _data);
-							location.reload();
-							loading.style.display = "none";
-							button.className = "button";
+					success: function (response) {
+						let res = JSON.parse(response);
+						if(res.token) {
+							console.log("Авторизация через JWT успешна");
+							// Сохраняем токен в localStorage
+							localStorage.setItem("token", res.token);
+							// Перенаправляем на главную
+							window.location.href = "index.php"; 
 						}
 					},
-					// функция ошибки
-					error: function( ){
-						console.log('Системная ошибка!');
+					error: function() {
+						alert("Ошибка авторизации");
 						loading.style.display = "none";
 						button.className = "button";
 					}
