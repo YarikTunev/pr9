@@ -1,25 +1,40 @@
 <?php
-header("Access-Control-Allow-Origin: https://security.permaviat.ru");
-header("Access-Control-Allow-Methods: POST");
-header("Access-Control-Allow-Headers: Content-Type");
+// 1. Разрешаем запросы и работу с куками
+header("Access-Control-Allow-Origin: http://security");
+header("Access-Control-Allow-Methods: POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Access-Control-Allow-Credentials: true");
+header("Content-Type: application/json");
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    exit;
+}
 
 include("./settings/connect_datebase.php");
 
-$login = $_POST['login'] ?? '';
-$password = $_POST['password'] ?? '';
+// 2. Читаем JSON, если FormData по какой-то причине не пришла
+$input = json_decode(file_get_contents('php://input'), true);
+$login = $_POST['login'] ?? $input['login'] ?? '';
+$password = $_POST['password'] ?? $input['password'] ?? '';
 
-$query_user = $mysqli->query("SELECT id, role FROM `users` WHERE `login`='".$login."' AND `password`= '".$password."';");
+if (empty($login)) {
+    http_response_code(400);
+    echo json_encode(["error" => "Пустой логин"]);
+    exit;
+}
+
+$query_user = $mysqli->query("SELECT id, roll FROM `users` WHERE `login`='".$login."' AND `password`= '".$password."';");
 
 if ($user = $query_user->fetch_assoc()) {
-
-    $secret_key = "YOUR_SUPER_SECRET_KEY"; 
+    // ВАЖНО: Этот ключ должен быть ТАКИМ ЖЕ в jwt_helper.php
+    $secret_key = "permaviat"; 
     $issued_at = time();
     $expiration = $issued_at + (60 * 60);
 
     $payload = [
         "iat" => $issued_at,
         "exp" => $expiration,
-        "sub" => $user['id'],
+        "id"  => $user['id'],
         "roll" => $user['roll']
     ];
 

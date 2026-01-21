@@ -1,6 +1,6 @@
 <?php
 function get_user_from_jwt() {
-    $secret_key = "permaviat";
+    $secret_key = "YOUR_SUPER_SECRET_KEY";
     if (!isset($_COOKIE['token'])) {
         return null;
     }

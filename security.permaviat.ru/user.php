@@ -1,121 +1,94 @@
 <?php
     include("./settings/jwt_helper.php");
+    include("./settings/connect_datebase.php");
+    
+    // Получаем данные ТОЛЬКО из JWT
     $user = get_user_from_jwt();
 
-    if ($user) {
-        if ($user['roll'] == 0) {
-            header("Location: user.php");
-            exit;
-        } else if ($user['roll'] == 1) {
-            header("Location: admin.php");
-            exit;
-        } else {
-		header("Location: login.php");
-		echo "Пользователя не существует";
-	}
-    }if (!$user || $user['roll'] != 0) {
-        header("Location: index.php"); // Выкидываем на вход
+    if (!$user) {
+        // Если токена нет, уходим на логин
+        header("Location: login.php");
         exit;
     }
-    $user_id = $user['sub'];
+
+    // Если это админ, перекидываем в админку
+    if (isset($user['roll']) && $user['roll'] == 1) {
+        header("Location: admin.php");
+        exit;
+    }
+
+    // Сохраняем ID для дальнейшего использования на странице
+    $current_user_id = $user['id']; 
 ?>
 <!DOCTYPE HTML>
 <html>
-	<head> 
-		<script src="https://code.jquery.com/jquery-1.8.3.js"></script>
-		<meta charset="utf-8">
-		<title> Личный кабинет </title>
-		
-		<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
-		<link rel="stylesheet" href="style.css">
-	</head>
-	<body>
-		<div class="top-menu">
-			<a href=# class = "singin"><img src = "img/ic-login.png"/></a>
-		
-			<a href=#><img src = "img/logo1.png"/></a>
-			<div class="name">
-				<a href="index.php">
-					<div class="subname">БЗОПАСНОСТЬ  ВЕБ-ПРИЛОЖЕНИЙ</div>
-					Пермский авиационный техникум им. А. Д. Швецова
-				</a>
-			</div>
-		</div>
-		<div class="space"> </div>
-		<div class="main">
-			<div class="content">
-				<input type="button" class="button" value="Выйти" onclick="logout()"/>
-				<div class="name" style="padding-bottom: 0px;">Личный кабинет</div>
-				<div class="description">Добро пожаловать: 
-					<?php
-						$user_to_query = $mysqli->query("SELECT * FROM `users` WHERE `id` = ".$_SESSION['user']);
-						$user_to_read = $user_to_query->fetch_row();
-						
-						echo $user_to_read[1];
-					?>
-					<br>Ваш идентификатор:
-					<?php
-						echo $user_to_read[0];
-					?>
-				</div>
-			
-				<div class="footer">
-					© КГАПОУ "Авиатехникум", 2020
-					<a href=#>Конфиденциальность</a>
-					<a href=#>Условия</a>
-				</div>
-			</div>
-		</div>
-		
-		<script>
-			var id_statement = -1;
-			function DeleteStatementt(id_statement) {
-				if(id_statement != -1) {
-					
-					var data = new FormData();
-					data.append("id_statement", id_statement);
-					
-					// AJAX запрос
-					$.ajax({
-						url         : 'ajax/delete_statement.php',
-						type        : 'POST', // важно!
-						data        : data,
-						cache       : false,
-						dataType    : 'html',
-						// отключаем обработку передаваемых данных, пусть передаются как есть
-						processData : false,
-						// отключаем установку заголовка типа запроса. Так jQuery скажет серверу что это строковой запрос
-						contentType : false, 
-						// функция успешного ответа сервера
-						success: function (_data) {
-							console.log(_data);
-							location.reload();
-						},
-						// функция ошибки
-						error: function(){
-							console.log('Системная ошибка!');
-						}
-					});
-				}
-			}
-			
-			function logout() {
-				$.ajax({
-					url         : 'ajax/logout.php',
-					type        : 'POST', // важно!
-					data        : null,
-					cache       : false,
-					dataType    : 'html',
-					processData : false,
-					contentType : false, 
-					success: function (_data) {
-						location.reload();
-					},
-					error: function( ){
-						console.log('Системная ошибка!');
-					}
-				});
-			}
-		</script>
-	</body>
+    <head>
+        <script src="https://code.jquery.com/jquery-1.8.3.js"></script>
+        <meta charset="utf-8">
+        <title> Личный кабинет </title>
+        <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+        <div class="top-menu">
+            <a href="#" class="singin"><img src="img/ic-login.png"/></a>
+            <a href="#"><img src="img/logo1.png"/></a>
+            <div class="name">
+                <a href="index.php">
+                    <div class="subname">БЕЗОПАСНОСТЬ ВЕБ-ПРИЛОЖЕНИЙ</div>
+                    Пермский авиационный техникум им. А. Д. Швецова
+                </a>
+            </div>
+        </div>
+        <div class="space"> </div>
+        <div class="main">
+            <div class="content">
+                <input type="button" class="button" value="Выйти" onclick="logout()"/>
+                <div class="name" style="padding-bottom: 0px;">Личный кабинет</div>
+                <div class="description">
+                    Добро пожаловать:
+                    <?php
+                        $current_user_id = $user['id'];
+
+                        // Получаем актуальное имя из базы
+                        $stmt = $mysqli->prepare("SELECT login FROM `users` WHERE `id` = ?");
+                        $stmt->bind_param("i", $current_user_id);
+                        $stmt->execute();
+                        $result = $stmt->get_result();
+                        $user_data = $result->fetch_assoc();
+
+                        if ($user_data) {
+                            echo htmlspecialchars($user_data['login']);
+                        } else {
+                            echo "Пользователь";
+                        }
+                    ?>
+                    <br>Ваш идентификатор:
+                    <?php echo htmlspecialchars($current_user_id); ?>
+                </div>
+            
+                <div class="footer">
+                    © КГАПОУ "Авиатехникум", 2020
+                    <a href="#">Конфиденциальность</a>
+                    <a href="#">Условия</a>
+                </div>
+            </div>
+        </div>
+        
+        <script>
+            function logout() {
+                $.ajax({
+                    url         : 'ajax/logout.php',
+                    type        : 'POST',
+                    success: function (_data) {
+                        // 3. После выхода отправляем на страницу авторизации
+                        window.location.href = "login.php"; 
+                    },
+                    error: function(){
+                        alert('Ошибка при выходе из системы');
+                    }
+                });
+            }
+        </script>
+    </body>
 </html>

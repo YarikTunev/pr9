@@ -90,12 +90,12 @@ html, body {
 	min-height: 150px;
 }
 .main .content .specialty:first-child {
-	//background-image: URL("img/specialty_1(1).png");
+	background-image: URL("img/specialty_1(1).png");
 	background-color: #fff;
 }
 
 .main .content .specialty:first-child .slider {
-	//background-image: URL("img/specialty_1(2).png");
+	background-image: URL("img/specialty_1(2).png");
 	background-color: #fff;
 }
 
@@ -162,7 +162,7 @@ html, body {
     display: block;
     text-decoration: none;
     padding-top: 10px;
-    //float: right;
+    float: right;
 	text-shadow: 1px 1px 2px black;
 }
 .main .content .specialty .description a:hover {

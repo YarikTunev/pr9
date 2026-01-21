@@ -1,23 +1,17 @@
 <?php
     include("./settings/jwt_helper.php");
+	include("./settings/connect_datebase.php");
     $user = get_user_from_jwt();
 
     if ($user) {
-        if ($user['roll'] == 0) {
+        if ($user['role'] == 0) {
             header("Location: user.php");
             exit;
-        } else if ($user['roll'] == 1) {
+        } else if ($user['role'] == 1) {
             header("Location: admin.php");
             exit;
-        } else {
-		header("Location: login.php");
-		echo "Пользователя не существует";
-	}
-    }if (!$user || $user['roll'] != 1) {
-        header("Location: index.php"); // Выкидываем, если не админ
-        exit;
+        }
     }
-    $admin_id = $user['sub'];
 ?>
 <!DOCTYPE HTML>
 <html>
